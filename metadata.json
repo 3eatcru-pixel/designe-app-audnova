@@ -1,0 +1,5 @@
+{
+  "name": "AntiGravity V23",
+  "description": "Redesign futurista premium do app AntiGravity V23 - Rádio P2P Mesh & Live Chat.",
+  "requestFramePermissions": ["microphone"]
+}
