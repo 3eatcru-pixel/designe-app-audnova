@@ -11,9 +11,12 @@ import { CreateRadioPage } from "./pages/CreateRadioPage";
 import { BadgesListPage } from "./pages/BadgesListPage";
 import { FeaturedRadiosPage } from "./pages/FeaturedRadiosPage";
 import { RegisterPage } from "./pages/RegisterPage";
+import MusicByCategoryPage from "./pages/MusicByCategoryPage";
 import { MobileLayout } from "./components/MobileLayout";
 import { AppState, AuthMode, Page, Radio, Transaction, Badge } from "./types";
 import { MOCK_USER, MOCK_RADIOS, BADGES } from "./constants";
+import { HyperService } from "./services/HyperService";
+import { registerHyperHandlers } from "./services/HyperHandlers";
 import { cn } from "./lib/utils";
 
 export default function App() {
@@ -33,6 +36,8 @@ export default function App() {
     inviteCodes: ["NOVA-2026", "MESH-99"],
     lastLoginDate: null,
   });
+
+  const hyperHandlers = React.useMemo(() => registerHyperHandlers(), []);
 
   // Daily Login Bonus
   React.useEffect(() => {
@@ -76,12 +81,24 @@ export default function App() {
   };
 
   const handleLogin = (mode: AuthMode) => {
-    setState((prev) => ({
-      ...prev,
-      authMode: mode,
-      user: mode === "user" ? { ...MOCK_USER } : null,
-      currentPage: "world",
-    }));
+    setState((prev) => {
+      let user = mode === "user" ? { ...MOCK_USER } : null;
+
+      // Apply daily Hyper reset
+      if (user) {
+        user = HyperService.handleDailyReset(user);
+        // Update level based on lifetime history
+        user.hyperLevel = HyperService.calculateHyperLevel(user.hyperHistoryLifetime);
+        user.maxActiveRadios = HyperService.getMaxRadiosForLevel(user.hyperLevel);
+      }
+
+      return {
+        ...prev,
+        authMode: mode,
+        user: user,
+        currentPage: "world",
+      };
+    });
   };
 
   const handleEnterWithInvite = (code: string) => {
@@ -99,10 +116,20 @@ export default function App() {
       name: data.name,
       avatar: data.avatar,
       hypers: 0,
+      hyperLevel: 1 as const,
+      hyperHistoryLifetime: 0,
       isVerified: true,
       badges: [],
       favorites: [],
       transactions: [],
+      hyperTransactions: [],
+      generosity: {
+        totalDonated: 0,
+        donationCount: 0,
+        lastDonationAt: "",
+      },
+      maxActiveRadios: 1,
+      lastDailyResetAt: new Date().toISOString(),
     };
 
     setState(prev => ({
@@ -114,13 +141,18 @@ export default function App() {
   };
 
   const handleGenerateInvite = () => {
-    if (state.user && state.user.hypers >= 5) {
-      const newCode = `NOVA-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-      handleSpendHypers(5, "Geração de Convite");
-      setState(prev => ({ ...prev, inviteCodes: [...prev.inviteCodes, newCode] }));
-      alert(`Convite gerado: ${newCode}`);
+    if (!state.user) return;
+
+    const result = hyperHandlers.handleCreateInvite(state.user);
+    if (result.success && result.user) {
+      setState((prev) => ({
+        ...prev,
+        user: result.user,
+        inviteCodes: [...prev.inviteCodes, result.inviteCode!],
+      }));
+      alert(`✅ Convite gerado: ${result.inviteCode}\n\n📊 Custo: 1 Hyper`);
     } else {
-      alert("Hypers insuficientes (Custo: 5).");
+      alert(`❌ ${result.error}`);
     }
   };
 
@@ -128,10 +160,10 @@ export default function App() {
     setState((prev) => {
       if (!prev.user) return prev;
       const isFavorite = prev.user.favorites.includes(radioId);
-      const newFavorites = isFavorite 
+      const newFavorites = isFavorite
         ? prev.user.favorites.filter(id => id !== radioId)
         : [...prev.user.favorites, radioId];
-      
+
       if (!isFavorite) {
         // Earn hypers for favoriting (first time only simulated by checking if it was already there)
         // For simplicity, let's just earn 1 hyper every time for now as requested "interações"
@@ -143,6 +175,22 @@ export default function App() {
         user: { ...prev.user, favorites: newFavorites }
       };
     });
+  };
+
+  const handleDonateToRadio = (radioId: string, radioHostId: string) => {
+    if (!state.user || !state.selectedRadio) return;
+
+    const result = hyperHandlers.handleDonateToRadio(state.user, radioId, radioHostId);
+    if (result.success && result.user) {
+      setState((prev) => ({
+        ...prev,
+        user: result.user,
+      }));
+      // Show neon animation/feedback
+      alert(`💫 ✅ Doação enviada para ${state.selectedRadio.host}!\n\n🎊 +1 Prestige • Você ganhou geração!`);
+    } else {
+      alert(`❌ ${result.error || 'Erro ao fazer doação'}`);
+    }
   };
 
   const handleLogout = () => {
@@ -197,12 +245,12 @@ export default function App() {
   };
 
   const handleCreateRadio = (radio: Radio) => {
-    setState((prev) => ({ 
-      ...prev, 
-      userRadios: [radio, ...prev.userRadios], 
+    setState((prev) => ({
+      ...prev,
+      userRadios: [radio, ...prev.userRadios],
       allRadios: [radio, ...prev.allRadios],
       currentPage: "dj-deck",
-      selectedRadio: radio 
+      selectedRadio: radio
     }));
 
     // Pioneer Badge for first 100 radios (simulated)
@@ -271,8 +319,8 @@ export default function App() {
     >
       {/* Dev Controls for verification of Empty States */}
       <div className="absolute top-2 right-16 flex gap-1 z-[100]">
-        <button 
-          onClick={toggleEmptyRadios} 
+        <button
+          onClick={toggleEmptyRadios}
           className={cn(
             "px-2 py-1 rounded text-[8px] font-bold uppercase transition-all",
             state.showEmptyRadios ? "bg-neon-cyan text-black" : "bg-white/5 text-white/40"
@@ -280,8 +328,8 @@ export default function App() {
         >
           R-Empty
         </button>
-        <button 
-          onClick={toggleEmptySignal} 
+        <button
+          onClick={toggleEmptySignal}
           className={cn(
             "px-2 py-1 rounded text-[8px] font-bold uppercase transition-all",
             state.showEmptySignal ? "bg-neon-cyan text-black" : "bg-white/5 text-white/40"
@@ -396,6 +444,13 @@ export default function App() {
         <CreateRadioPage
           onBack={() => handlePageChange("world")}
           onCreate={handleCreateRadio}
+        />
+      )}
+
+      {state.currentPage === "music-categories" && (
+        <MusicByCategoryPage
+          onBack={() => handlePageChange("profile")}
+          onSelectRadio={handleSelectRadio}
         />
       )}
     </MobileLayout>

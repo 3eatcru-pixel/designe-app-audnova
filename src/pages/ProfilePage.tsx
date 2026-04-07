@@ -19,13 +19,13 @@ interface ProfilePageProps {
   onGenerateInvite?: () => void;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ 
-  authMode, 
-  user, 
-  onPageChange, 
-  onLogout, 
-  userRadios, 
-  onUpdateAvatar, 
+export const ProfilePage: React.FC<ProfilePageProps> = ({
+  authMode,
+  user,
+  onPageChange,
+  onLogout,
+  userRadios,
+  onUpdateAvatar,
   onDeleteRadio,
   onGenerateInvite
 }) => {
@@ -66,9 +66,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{user?.email}</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-8 px-3"
             onClick={() => {
               const newAvatar = `https://picsum.photos/seed/${Date.now()}/200/200`;
@@ -103,7 +103,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       <section className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-black text-white/40 uppercase tracking-widest">Minhas Badges</h3>
-          <button 
+          <button
             onClick={() => onPageChange?.("badges-list")}
             className="text-[10px] font-bold text-neon-indigo uppercase tracking-widest hover:underline"
           >
@@ -117,11 +117,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             </div>
           ) : (
             user?.badges.map((badge) => (
-              <div 
-                key={badge.id} 
+              <div
+                key={badge.id}
                 className="flex flex-col items-center gap-2 shrink-0"
               >
-                <div 
+                <div
                   className={cn(
                     "w-12 h-12 rounded-xl glass flex items-center justify-center border",
                     badge.rarity === "gold" && "text-warning border-warning/20 shadow-[0_0_10px_rgba(255,215,0,0.1)]",
@@ -143,8 +143,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
       {/* P2P Messages & Security Hub */}
       <section className="grid grid-cols-2 gap-3">
-        <Card 
-          className="flex flex-col items-center justify-center py-4 gap-2 hover:bg-white/5 cursor-pointer transition-all" 
+        <Card
+          className="flex flex-col items-center justify-center py-4 gap-2 hover:bg-white/5 cursor-pointer transition-all"
           variant="default"
           onClick={() => onPageChange?.("p2p-list")}
         >
@@ -154,8 +154,23 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
             <span className="text-[7px] font-bold text-white/20 uppercase tracking-widest">Chat Amigos</span>
           </div>
         </Card>
-        <Card 
-          className="flex flex-col items-center justify-center py-4 gap-2 hover:bg-white/5 cursor-pointer transition-all" 
+        <Card
+          className="flex flex-col items-center justify-center py-4 gap-2 hover:bg-white/5 cursor-pointer transition-all"
+          variant="default"
+          onClick={() => onPageChange?.("music-categories")}
+        >
+          <RadioIcon size={20} className="text-neon-cyan" />
+          <div className="text-center">
+            <span className="text-[10px] font-black text-white uppercase tracking-tight block">Categorias</span>
+            <span className="text-[7px] font-bold text-white/20 uppercase tracking-widest">Explorar Música</span>
+          </div>
+        </Card>
+      </section>
+
+      {/* Existing Security Hub moved to new row */}
+      <section className="grid grid-cols-2 gap-3">
+        <Card
+          className="flex flex-col items-center justify-center py-4 gap-2 hover:bg-white/5 cursor-pointer transition-all"
           variant="default"
           onClick={() => onPageChange?.("security")}
         >
@@ -169,8 +184,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
       {/* Profile Settings Card */}
       <section>
-        <Card 
-          className="p-4 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-all" 
+        <Card
+          className="p-4 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-all"
           variant="default"
           onClick={() => setIsSettingsOpen(true)}
         >
@@ -200,8 +215,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
               Custo: 5 Hypers. A chave permite que um novo usuário crie uma identidade na malha AudNova.
             </p>
           </div>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             className="w-full h-10 gap-2"
             onClick={onGenerateInvite}
           >
@@ -244,7 +259,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-black text-white/40 uppercase tracking-widest">Minhas Rádios</h3>
           <div className="flex items-center gap-2">
-            <button 
+            <button
               onClick={() => onPageChange?.("create-radio")}
               className="text-[10px] font-black text-neon-cyan uppercase tracking-widest hover:underline"
             >
@@ -254,8 +269,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
           </div>
         </div>
         {userRadios.length === 0 ? (
-          <Card 
-            className="p-6 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-white/5 hover:border-neon-cyan/20 cursor-pointer transition-all" 
+          <Card
+            className="p-6 flex flex-col items-center justify-center gap-3 border-2 border-dashed border-white/5 hover:border-neon-cyan/20 cursor-pointer transition-all"
             variant="default"
             onClick={() => onPageChange?.("create-radio")}
           >
@@ -270,9 +285,9 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
         ) : (
           <div className="flex flex-col gap-3">
             {userRadios.map((radio) => (
-              <Card 
+              <Card
                 key={radio.id}
-                className="p-4 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-all" 
+                className="p-4 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-all"
                 variant="highlight"
                 onClick={() => onPageChange?.("dj-deck")}
               >
@@ -344,7 +359,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
       {/* Settings Modal */}
       {isSettingsOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="absolute inset-0 bg-black-pure/80 backdrop-blur-md"
@@ -403,7 +418,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                             <img src={radio.image} alt={radio.name} className="w-8 h-8 rounded-lg object-cover" />
                             <span className="text-xs font-bold text-white/80">{radio.name}</span>
                           </div>
-                          <button 
+                          <button
                             onClick={() => {
                               onDeleteRadio?.(radio.id);
                             }}
@@ -418,8 +433,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
                 )}
               </div>
 
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 className="w-full h-12 mt-2"
                 onClick={() => {
                   alert("Perfil Atualizado!");
@@ -431,8 +446,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({
 
               <div className="h-px bg-white/5 my-2" />
 
-              <Button 
-                variant="danger" 
+              <Button
+                variant="danger"
                 className="w-full h-12 gap-2"
                 onClick={onLogout}
               >
