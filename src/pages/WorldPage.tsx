@@ -1,11 +1,11 @@
 import * as React from "react";
 import { motion } from "motion/react";
-import { Search, Radio as RadioIcon, Users, Signal, Zap, ChevronRight } from "lucide-react";
+import { Search, Radio as RadioIcon, Users, Signal, Zap, ChevronRight, Heart } from "lucide-react";
 import { Card } from "../components/Card";
 import { Chip } from "../components/Chip";
 import { EmptyState } from "../components/EmptyState";
 import { MOCK_RADIOS, CATEGORIES } from "../constants";
-import { Radio, AuthMode } from "../types";
+import { Radio, AuthMode, Page } from "../types";
 import { cn } from "../lib/utils";
 
 interface WorldPageProps {
@@ -16,6 +16,8 @@ interface WorldPageProps {
   onToggleEmpty?: () => void;
   radios: Radio[];
   onSeeAll?: () => void;
+  onFavoriteRadio?: (radioId: string) => void;
+  userFavorites?: string[];
 }
 
 export const WorldPage: React.FC<WorldPageProps> = ({
@@ -26,8 +28,17 @@ export const WorldPage: React.FC<WorldPageProps> = ({
   onToggleEmpty,
   radios,
   onSeeAll,
+  onFavoriteRadio,
+  userFavorites = [],
 }) => {
   const [selectedCategory, setSelectedCategory] = React.useState("Tudo");
+  const [showRechargeMsg, setShowRechargeMsg] = React.useState(false);
+
+  React.useEffect(() => {
+    // Check if we came from Security Hub with a recharge request
+    // For now we'll just check a simple flag or just simulate it
+    // In a real app we might use a URL param or state
+  }, []);
 
   const filteredRadios = React.useMemo(() => {
     if (showEmpty) return [];
@@ -53,34 +64,54 @@ export const WorldPage: React.FC<WorldPageProps> = ({
     });
   }, [radios, showEmpty, selectedCategory]);
 
+  const liveRadios = radios.filter(r => r.status === "live");
+  const topRadio = liveRadios.length > 0 ? liveRadios[0] : null;
+
   return (
     <div className="flex flex-col h-full overflow-y-auto pr-2 no-scrollbar pb-32 gap-8">
       {/* Hero "Agora no Ar" */}
       <section className="relative h-48 rounded-3xl overflow-hidden group">
         <img
-          src="https://picsum.photos/seed/cyberpunk/800/400"
+          src={topRadio ? topRadio.image : "https://picsum.photos/seed/audnova/800/400"}
           alt="Hero"
           className="w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black-pure via-black-pure/40 to-transparent" />
         <div className="absolute bottom-6 left-6 right-6 flex flex-col gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-error animate-pulse" />
-            <span className="text-[10px] font-black text-error uppercase tracking-widest">Agora no Ar</span>
+            <div className={cn("w-2 h-2 rounded-full animate-pulse", topRadio ? "bg-error" : "bg-neon-cyan")} />
+            <span className={cn("text-[10px] font-black uppercase tracking-widest", topRadio ? "text-error" : "text-neon-cyan")}>
+              {topRadio ? "Agora no Ar" : "AudNova Mesh"}
+            </span>
           </div>
           <h2 className="text-2xl font-black text-white tracking-tighter uppercase italic leading-none">
-            Aether Mesh <span className="text-neon-cyan">01</span>
+            {topRadio ? topRadio.name : "Bem-vindo à Malha"}
           </h2>
-          <p className="text-xs text-white/60 font-medium">GossipEngine_Admin transmitindo ao vivo via P2P</p>
+          <p className="text-xs text-white/60 font-medium">
+            {topRadio ? `${topRadio.host} transmitindo ao vivo` : "Conecte-se à nova era da rádio P2P"}
+          </p>
         </div>
-        <button className="absolute bottom-6 right-6 w-10 h-10 rounded-full bg-neon-cyan text-black flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.4)] hover:scale-110 active:scale-95 transition-all">
-          <ChevronRight size={20} />
-        </button>
+        {topRadio && (
+          <button 
+            onClick={() => onSelectRadio(topRadio)}
+            className="absolute bottom-6 right-6 w-10 h-10 rounded-full bg-neon-cyan text-black flex items-center justify-center shadow-[0_0_15px_rgba(0,255,255,0.4)] hover:scale-110 active:scale-95 transition-all"
+          >
+            <ChevronRight size={20} />
+          </button>
+        )}
       </section>
 
       {/* Metrics Cards */}
       <section className="grid grid-cols-3 gap-3">
-        <Card className="flex flex-col items-center justify-center py-4 gap-1" variant="default">
+        <Card 
+          className="flex flex-col items-center justify-center py-4 gap-1 cursor-pointer hover:bg-white/5 transition-all" 
+          variant="default"
+          onClick={() => {
+            if (authMode === "user") {
+              alert("Dica: Favorite rádios para ganhar Hypers extras!");
+            }
+          }}
+        >
           <RadioIcon size={16} className="text-neon-cyan" />
           <span className="text-lg font-black text-white leading-none">
             {authMode === "guest" ? "---" : radios.filter(r => r.status === "live").length}
@@ -90,14 +121,14 @@ export const WorldPage: React.FC<WorldPageProps> = ({
         <Card className="flex flex-col items-center justify-center py-4 gap-1" variant="default">
           <Users size={16} className="text-neon-indigo" />
           <span className="text-lg font-black text-white leading-none">
-            {authMode === "guest" ? "---" : radios.reduce((acc, r) => acc + r.listeners, 0) + 240}
+            {authMode === "guest" ? "---" : radios.reduce((acc, r) => acc + r.listeners, 0)}
           </span>
           <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Online</span>
         </Card>
         <Card className="flex flex-col items-center justify-center py-4 gap-1" variant="default">
           <Zap size={16} className="text-warning" />
           <span className="text-lg font-black text-white leading-none">
-            {authMode === "guest" ? "---" : "142"}
+            {authMode === "guest" ? "---" : "0"}
           </span>
           <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Convites</span>
         </Card>
@@ -211,13 +242,27 @@ export const WorldPage: React.FC<WorldPageProps> = ({
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className={cn(
-                    "text-[8px] font-black uppercase px-1.5 py-0.5 rounded",
-                    radio.status === "live" ? "bg-neon-cyan/20 text-neon-cyan" : "bg-white/5 text-white/20"
-                  )}>
-                    {radio.status}
-                  </span>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onFavoriteRadio?.(radio.id);
+                      }}
+                      className={cn(
+                        "p-1.5 rounded-lg transition-all",
+                        userFavorites.includes(radio.id) ? "text-error bg-error/10" : "text-white/20 hover:text-white/40 bg-white/5"
+                      )}
+                    >
+                      <Heart size={14} fill={userFavorites.includes(radio.id) ? "currentColor" : "none"} />
+                    </button>
+                    <span className={cn(
+                      "text-[8px] font-black uppercase px-1.5 py-0.5 rounded",
+                      radio.status === "live" ? "bg-neon-cyan/20 text-neon-cyan" : "bg-white/5 text-white/20"
+                    )}>
+                      {radio.status}
+                    </span>
+                  </div>
                   <span className="text-[10px] font-bold text-white/20 uppercase">{radio.category}</span>
                 </div>
               </Card>

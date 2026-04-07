@@ -68,7 +68,7 @@ export const MobileLayout: React.FC<MobileLayoutProps> = ({
       <div className="relative w-full max-w-[420px] h-full sm:h-[840px] bg-black-pure sm:rounded-[40px] sm:border-[8px] border-gray-medium shadow-2xl overflow-hidden flex flex-col">
         {/* Status Bar Area */}
         <div className="h-10 flex items-center justify-between px-6 pt-2">
-          <span className="text-[10px] font-bold tracking-widest text-white/40 uppercase">AntiGravity V23</span>
+          <span className="text-[10px] font-bold tracking-widest text-white/40 uppercase">AudNova Mesh</span>
           <div className="flex items-center gap-4">
             {authMode === "user" && user && (
               <div className="flex items-center gap-1">

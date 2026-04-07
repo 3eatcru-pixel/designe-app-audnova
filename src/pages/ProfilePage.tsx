@@ -16,12 +16,28 @@ interface ProfilePageProps {
   userRadios: Radio[];
   onUpdateAvatar?: (avatar: string) => void;
   onDeleteRadio?: (radioId: string) => void;
+  onGenerateInvite?: () => void;
 }
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ authMode, user, onPageChange, onLogout, userRadios, onUpdateAvatar, onDeleteRadio }) => {
+export const ProfilePage: React.FC<ProfilePageProps> = ({ 
+  authMode, 
+  user, 
+  onPageChange, 
+  onLogout, 
+  userRadios, 
+  onUpdateAvatar, 
+  onDeleteRadio,
+  onGenerateInvite
+}) => {
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
-  const [newName, setNewName] = React.useState(MOCK_USER.name);
+  const [newName, setNewName] = React.useState(user?.name || "");
   const [newPassword, setNewPassword] = React.useState("");
+
+  React.useEffect(() => {
+    if (user) {
+      setNewName(user.name);
+    }
+  }, [user]);
 
   if (authMode === "guest") {
     return (
@@ -38,16 +54,16 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ authMode, user, onPage
         <div className="relative">
           <div className="w-24 h-24 rounded-full border-2 border-neon-cyan p-1 shadow-[0_0_20px_rgba(0,255,255,0.2)]">
             <img
-              src={user?.avatar || `https://picsum.photos/seed/${MOCK_USER.id}/200/200`}
-              alt={MOCK_USER.name}
+              src={user?.avatar || `https://picsum.photos/seed/${user?.id}/200/200`}
+              alt={user?.name}
               className="w-full h-full rounded-full object-cover"
             />
           </div>
           <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-success border-4 border-black-pure" />
         </div>
         <div className="text-center">
-          <h2 className="text-xl font-black text-white tracking-tighter uppercase italic">{MOCK_USER.name}</h2>
-          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{MOCK_USER.email}</p>
+          <h2 className="text-xl font-black text-white tracking-tighter uppercase italic">{user?.name}</h2>
+          <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{user?.email}</p>
         </div>
         <div className="flex gap-2">
           <Button 
@@ -73,12 +89,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ authMode, user, onPage
       <section className="grid grid-cols-2 gap-3">
         <Card className="flex flex-col items-center justify-center py-4 gap-1" variant="highlight">
           <Zap size={16} className="text-neon-cyan" />
-          <span className="text-lg font-black text-white leading-none">{MOCK_USER.hypers}</span>
+          <span className="text-lg font-black text-white leading-none">{user?.hypers || 0}</span>
           <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Hypers</span>
         </Card>
         <Card className="flex flex-col items-center justify-center py-4 gap-1" variant="default">
           <Award size={16} className="text-neon-indigo" />
-          <span className="text-lg font-black text-white leading-none">{BADGES.length}</span>
+          <span className="text-lg font-black text-white leading-none">{user?.badges.length || 0}</span>
           <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Badges</span>
         </Card>
       </section>
@@ -95,27 +111,33 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ authMode, user, onPage
           </button>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-          {BADGES.map((badge) => (
-            <div 
-              key={badge.id} 
-              className="flex flex-col items-center gap-2 shrink-0"
-            >
-              <div 
-                className={cn(
-                  "w-12 h-12 rounded-xl glass flex items-center justify-center border",
-                  badge.rarity === "gold" && "text-warning border-warning/20 shadow-[0_0_10px_rgba(255,215,0,0.1)]",
-                  badge.rarity === "silver" && "text-white/60 border-white/10",
-                  badge.rarity === "bronze" && "text-[#CD7F32] border-[#CD7F32]/20"
-                )}
-                title={badge.name}
-              >
-                <Award size={20} />
-              </div>
-              <span className="text-[7px] font-bold text-white/20 uppercase tracking-tighter text-center max-w-[48px] truncate">
-                {badge.reason}
-              </span>
+          {user?.badges.length === 0 ? (
+            <div className="flex-1 py-4 flex flex-col items-center justify-center border border-dashed border-white/5 rounded-2xl">
+              <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Nenhuma badge conquistada</span>
             </div>
-          ))}
+          ) : (
+            user?.badges.map((badge) => (
+              <div 
+                key={badge.id} 
+                className="flex flex-col items-center gap-2 shrink-0"
+              >
+                <div 
+                  className={cn(
+                    "w-12 h-12 rounded-xl glass flex items-center justify-center border",
+                    badge.rarity === "gold" && "text-warning border-warning/20 shadow-[0_0_10px_rgba(255,215,0,0.1)]",
+                    badge.rarity === "silver" && "text-white/60 border-white/10",
+                    badge.rarity === "bronze" && "text-[#CD7F32] border-[#CD7F32]/20"
+                  )}
+                  title={badge.name}
+                >
+                  <Award size={20} />
+                </div>
+                <span className="text-[7px] font-bold text-white/20 uppercase tracking-tighter text-center max-w-[48px] truncate">
+                  {badge.reason}
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </section>
 
@@ -175,13 +197,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ authMode, user, onPage
           <div className="flex flex-col gap-1">
             <h4 className="text-[10px] font-black text-white uppercase tracking-widest">Gerar Chave de Ativação</h4>
             <p className="text-[8px] text-white/30 uppercase tracking-widest leading-relaxed">
-              Custo: 5 Hypers. A chave permite que um novo usuário crie uma identidade na malha AntiGravity.
+              Custo: 5 Hypers. A chave permite que um novo usuário crie uma identidade na malha AudNova.
             </p>
           </div>
           <Button 
             variant="primary" 
             className="w-full h-10 gap-2"
-            onClick={() => alert("Chave Gerada: AG-V23-" + Math.random().toString(36).substring(7).toUpperCase())}
+            onClick={onGenerateInvite}
           >
             <Zap size={14} />
             <span className="text-[10px] font-black uppercase tracking-widest text-black">Gerar Chave (5 Hypers)</span>

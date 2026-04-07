@@ -1,5 +1,5 @@
 {
-  "name": "AntiGravity V23",
-  "description": "Redesign futurista premium do app AntiGravity V23 - Rádio P2P Mesh & Live Chat.",
+  "name": "AudNova",
+  "description": "AudNova - Rádio P2P Mesh & Live Chat. A nova era da transmissão descentralizada.",
   "requestFramePermissions": ["microphone"]
 }

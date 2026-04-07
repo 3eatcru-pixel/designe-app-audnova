@@ -1,6 +1,6 @@
 import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Send, Mic, Music, Radio as RadioIcon, MoreVertical, Lock, ChevronLeft, Play, Pause, SkipForward, Users, Signal, Zap, Settings, X, Image as ImageIcon, Plus } from "lucide-react";
+import { Send, Mic, Music, Radio as RadioIcon, MoreVertical, Lock, ChevronLeft, Play, Pause, SkipForward, Users, Signal, Zap, Settings, X, Image as ImageIcon, Plus, Heart } from "lucide-react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { StatusPill } from "../components/StatusPill";
@@ -15,6 +15,10 @@ interface ChatDeckProps {
   onClose?: () => void;
   isConfigOpen?: boolean;
   setIsConfigOpen?: (val: boolean) => void;
+  onFavoriteRadio?: (radioId: string) => void;
+  userFavorites?: string[];
+  onSpendHypers?: (amount: number, description: string) => void;
+  userHypers?: number;
 }
 
 export const ChatDeck: React.FC<ChatDeckProps> = ({
@@ -24,6 +28,10 @@ export const ChatDeck: React.FC<ChatDeckProps> = ({
   onClose,
   isConfigOpen = false,
   setIsConfigOpen,
+  onFavoriteRadio,
+  userFavorites = [],
+  onSpendHypers,
+  userHypers = 0,
 }) => {
   const [messages, setMessages] = React.useState<Message[]>([
     { id: "1", sender: "GossipEngine_Admin", text: "Bem-vindo à malha Aether. Transmissão segura iniciada.", timestamp: new Date(), isMe: false },
@@ -97,7 +105,11 @@ export const ChatDeck: React.FC<ChatDeckProps> = ({
   };
 
   const handleSendHyper = () => {
-    alert("Hyper Enviado! -1 da sua carteira.");
+    if (userHypers < 1) {
+      alert("Hypers insuficientes.");
+      return;
+    }
+    onSpendHypers?.(1, `Envio de Hyper para ${selectedRadio?.name || "Rádio"}`);
     const newMessage: Message = {
       id: "hyper-" + Date.now().toString(),
       sender: "CyberRunner_23",
@@ -145,12 +157,21 @@ export const ChatDeck: React.FC<ChatDeckProps> = ({
                 <div className="flex flex-col">
                   <h4 className="text-xs font-black text-white uppercase tracking-tight leading-none mb-1">{selectedRadio.name}</h4>
                   <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-error animate-pulse" />
+                    <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", selectedRadio.status === "live" ? "bg-error" : "bg-white/20")} />
                     <span className="text-[8px] font-bold text-white/40 uppercase tracking-widest">{selectedRadio.host}</span>
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => onFavoriteRadio?.(selectedRadio.id)}
+                  className={cn(
+                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                    userFavorites.includes(selectedRadio.id) ? "text-error bg-error/10" : "text-white/20 hover:text-white/40 bg-white/5"
+                  )}
+                >
+                  <Heart size={16} fill={userFavorites.includes(selectedRadio.id) ? "currentColor" : "none"} />
+                </button>
                 <Button 
                   variant="primary" 
                   size="sm" 
@@ -216,16 +237,23 @@ export const ChatDeck: React.FC<ChatDeckProps> = ({
                     )}
                   </div>
 
-                  <div className="text-right">
-                    <span className="text-[8px] font-black text-neon-cyan uppercase tracking-[0.2em] drop-shadow-md">On Air</span>
-                    <h4 className="text-sm font-black text-white uppercase tracking-tight truncate max-w-[180px] drop-shadow-lg">
-                      {isDJMode ? currentTrack : (selectedRadio ? `Sintonizado: ${selectedRadio.name}` : currentTrack)}
-                    </h4>
-                    <div className="flex items-center justify-end gap-1 mt-1">
-                      <div className="w-1 h-1 rounded-full bg-success animate-pulse" />
-                      <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">Mirror Mode Active</span>
+                    <div className="text-right">
+                      <span className={cn(
+                        "text-[8px] font-black uppercase tracking-[0.2em] drop-shadow-md",
+                        (isDJMode || selectedRadio?.status === "live") ? "text-neon-cyan" : "text-white/20"
+                      )}>
+                        {(isDJMode || selectedRadio?.status === "live") ? "On Air" : "Offline"}
+                      </span>
+                      <h4 className="text-sm font-black text-white uppercase tracking-tight truncate max-w-[180px] drop-shadow-lg">
+                        {isDJMode ? currentTrack : (selectedRadio ? (selectedRadio.status === "live" ? `Sintonizado: ${selectedRadio.name}` : "Modo Loop Ativo") : currentTrack)}
+                      </h4>
+                      <div className="flex items-center justify-end gap-1 mt-1">
+                        <div className={cn("w-1 h-1 rounded-full animate-pulse", (isDJMode || selectedRadio?.status === "live") ? "bg-success" : "bg-warning")} />
+                        <span className="text-[8px] font-bold text-white/60 uppercase tracking-widest">
+                          {(isDJMode || selectedRadio?.status === "live") ? "Mirror Mode Active" : "Buffer Loop (4 tracks)"}
+                        </span>
+                      </div>
                     </div>
-                  </div>
                 </div>
 
                 {/* Center: Visualizer or Empty Space */}

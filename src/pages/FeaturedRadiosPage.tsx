@@ -1,6 +1,6 @@
 import * as React from "react";
 import { motion } from "motion/react";
-import { ChevronLeft, Search, Users, Signal, Zap, Award } from "lucide-react";
+import { ChevronLeft, Search, Users, Signal, Zap, Award, Heart } from "lucide-react";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { Radio } from "../types";
@@ -10,9 +10,17 @@ interface FeaturedRadiosPageProps {
   onBack: () => void;
   onSelectRadio: (radio: Radio) => void;
   radios: Radio[];
+  onFavoriteRadio?: (radioId: string) => void;
+  userFavorites?: string[];
 }
 
-export const FeaturedRadiosPage: React.FC<FeaturedRadiosPageProps> = ({ onBack, onSelectRadio, radios }) => {
+export const FeaturedRadiosPage: React.FC<FeaturedRadiosPageProps> = ({ 
+  onBack, 
+  onSelectRadio, 
+  radios, 
+  onFavoriteRadio, 
+  userFavorites = [] 
+}) => {
   const [search, setSearch] = React.useState("");
 
   const featuredRadios = React.useMemo(() => {
@@ -120,13 +128,27 @@ export const FeaturedRadiosPage: React.FC<FeaturedRadiosPageProps> = ({ onBack, 
               </div>
             </div>
             
-            <div className="flex flex-col items-end gap-1">
-              <span className={cn(
-                "text-[8px] font-black uppercase px-1.5 py-0.5 rounded",
-                radio.status === "live" ? "bg-neon-cyan/20 text-neon-cyan" : "bg-white/5 text-white/20"
-              )}>
-                {radio.status}
-              </span>
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFavoriteRadio?.(radio.id);
+                  }}
+                  className={cn(
+                    "p-1.5 rounded-lg transition-all",
+                    userFavorites.includes(radio.id) ? "text-error bg-error/10" : "text-white/20 hover:text-white/40 bg-white/5"
+                  )}
+                >
+                  <Heart size={14} fill={userFavorites.includes(radio.id) ? "currentColor" : "none"} />
+                </button>
+                <span className={cn(
+                  "text-[8px] font-black uppercase px-1.5 py-0.5 rounded",
+                  radio.status === "live" ? "bg-neon-cyan/20 text-neon-cyan" : "bg-white/5 text-white/20"
+                )}>
+                  {radio.status}
+                </span>
+              </div>
               <span className="text-[10px] font-bold text-white/20 uppercase">{radio.category}</span>
             </div>
           </Card>

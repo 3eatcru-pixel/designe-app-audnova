@@ -59,7 +59,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
             </div>
           </div>
           <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic mb-2">
-            AntiGravity <span className="text-neon-cyan">V23</span>
+            AudNova <span className="text-neon-cyan">Mesh</span>
           </h1>
           <p className="text-xs font-bold text-white/30 uppercase tracking-[0.3em]">
             P2P Mesh Radio & Live Chat

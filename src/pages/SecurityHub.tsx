@@ -1,11 +1,11 @@
 import * as React from "react";
 import { motion } from "motion/react";
-import { Wallet, Award, Radio as RadioIcon, Heart, Settings, ChevronRight, Lock, Plus } from "lucide-react";
+import { Wallet, Award, Radio as RadioIcon, Heart, Settings, ChevronRight, Lock, Plus, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { Card } from "../components/Card";
 import { Button } from "../components/Button";
 import { EmptyState } from "../components/EmptyState";
-import { BADGES, DONORS, MOCK_USER } from "../constants";
-import { Radio, AuthMode, Page } from "../types";
+import { BADGES, DONORS } from "../constants";
+import { Radio, AuthMode, Page, User } from "../types";
 import { cn } from "../lib/utils";
 
 interface SecurityHubProps {
@@ -13,9 +13,10 @@ interface SecurityHubProps {
   showEmpty: boolean;
   userRadio: Radio | null;
   onPageChange?: (page: Page) => void;
+  user: User | null;
 }
 
-export const SecurityHub: React.FC<SecurityHubProps> = ({ authMode, showEmpty, userRadio, onPageChange }) => {
+export const SecurityHub: React.FC<SecurityHubProps> = ({ authMode, showEmpty, userRadio, onPageChange, user }) => {
   if (authMode === "guest") {
     return (
       <div className="h-full flex items-center justify-center">
@@ -38,23 +39,32 @@ export const SecurityHub: React.FC<SecurityHubProps> = ({ authMode, showEmpty, u
               <div className="flex flex-col">
                 <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest leading-none mb-1">Saldo Atual</span>
                 <span className="text-2xl font-black text-white tracking-tighter uppercase italic leading-none">
-                  {MOCK_USER.hypers} <span className="text-neon-cyan">Hypers</span>
+                  {user?.hypers || 0} <span className="text-neon-cyan">Hypers</span>
                 </span>
               </div>
             </div>
-            <Button variant="ghost" size="sm" className="h-8 px-3">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 px-3"
+              onClick={() => onPageChange?.("world")}
+            >
               <Plus size={14} className="mr-1" />
               Recarregar
             </Button>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1 p-3 rounded-xl bg-white/5 border border-white/5">
-              <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Ganhos (24h)</span>
-              <span className="text-sm font-black text-success">+12.4 H</span>
+              <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Ganhos Total</span>
+              <span className="text-sm font-black text-success">
+                +{user?.transactions.filter(t => t.type === "earn").reduce((acc, t) => acc + t.amount, 0) || 0} H
+              </span>
             </div>
             <div className="flex flex-col gap-1 p-3 rounded-xl bg-white/5 border border-white/5">
-              <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Gastos (24h)</span>
-              <span className="text-sm font-black text-error">-2.1 H</span>
+              <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Gastos Total</span>
+              <span className="text-sm font-black text-error">
+                -{user?.transactions.filter(t => t.type === "spend").reduce((acc, t) => acc + t.amount, 0) || 0} H
+              </span>
             </div>
           </div>
         </Card>
@@ -153,24 +163,43 @@ export const SecurityHub: React.FC<SecurityHubProps> = ({ authMode, showEmpty, u
         )}
       </section>
 
-      {/* Recent Donors */}
+      {/* Transaction History */}
       <section className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-black text-white/40 uppercase tracking-widest">Doadores Recentes</h3>
-          <Heart size={14} className="text-error/40" />
+          <h3 className="text-xs font-black text-white/40 uppercase tracking-widest">Histórico de Transações</h3>
+          <ArrowUpRight size={14} className="text-white/20" />
         </div>
         <div className="flex flex-col gap-2">
-          {DONORS.map((donor) => (
-            <div key={donor.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gray-medium flex items-center justify-center text-[10px] font-bold text-white/40">
-                  {donor.name[0]}
-                </div>
-                <span className="text-xs font-bold text-white/80">{donor.name}</span>
-              </div>
-              <span className="text-xs font-black text-neon-cyan">+{donor.amount} H</span>
+          {user?.transactions.length === 0 ? (
+            <div className="py-8 flex flex-col items-center justify-center border border-dashed border-white/5 rounded-2xl">
+              <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">Nenhuma transação registrada</span>
             </div>
-          ))}
+          ) : (
+            user?.transactions.map((tx) => (
+              <div key={tx.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-8 h-8 rounded-lg flex items-center justify-center",
+                    tx.type === "earn" ? "bg-success/10 text-success" : "bg-error/10 text-error"
+                  )}>
+                    {tx.type === "earn" ? <ArrowDownLeft size={14} /> : <ArrowUpRight size={14} />}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-white/80">{tx.description}</span>
+                    <span className="text-[8px] font-bold text-white/20 uppercase tracking-widest">
+                      {new Date(tx.timestamp).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+                <span className={cn(
+                  "text-xs font-black",
+                  tx.type === "earn" ? "text-success" : "text-error"
+                )}>
+                  {tx.type === "earn" ? "+" : "-"}{tx.amount} H
+                </span>
+              </div>
+            ))
+          )}
         </div>
       </section>
     </div>

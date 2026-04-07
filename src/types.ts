@@ -1,6 +1,14 @@
 export type AuthMode = "guest" | "user" | "none";
 
-export type Page = "world" | "security" | "chat" | "auth" | "dj-deck" | "profile" | "p2p-list" | "p2p-chat" | "create-radio" | "badges-list" | "featured-radios";
+export type Page = "world" | "security" | "chat" | "auth" | "dj-deck" | "profile" | "p2p-list" | "p2p-chat" | "create-radio" | "badges-list" | "featured-radios" | "register";
+
+export interface Transaction {
+  id: string;
+  type: "earn" | "spend";
+  amount: number;
+  description: string;
+  timestamp: string;
+}
 
 export interface Badge {
   id: string;
@@ -17,6 +25,9 @@ export interface User {
   hypers: number;
   isVerified: boolean;
   avatar?: string;
+  badges: Badge[];
+  favorites: string[]; // Radio IDs
+  transactions: Transaction[];
 }
 
 export interface Radio {
